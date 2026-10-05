@@ -1,0 +1,38 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>رياضيات أولى ثانوي - عربجي الطيب</title>
+<style>
+:root{--navy:#0d1b34;--blue:#1769e0;--bg:#f5f7fb;--text:#17243b;--muted:#718096}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Tahoma,sans-serif}
+header{background:var(--navy);color:#fff}.nav{max-width:1100px;margin:auto;padding:15px 18px;display:flex;align-items:center}.brand{font-weight:800;font-size:20px;margin-left:auto}.brand b{color:#5ca5ff}nav a{color:#dce7fa;text-decoration:none;margin:0 9px}
+.hero,.box{background:#fff;border-radius:18px;box-shadow:0 7px 25px #1020400b}.hero{max-width:1100px;margin:22px auto;padding:28px 20px}.hero h1{margin:0 0 8px;color:var(--blue);font-size:31px}.hero p{margin:0;color:var(--muted)}
+.container{max-width:1100px;margin:auto;padding:0 18px}.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}.box{padding:19px;margin-bottom:18px}.lesson{border:1px solid #e4eaf2;border-radius:14px;padding:12px;margin-top:10px}.lesson strong{display:block;margin-bottom:8px}
+.btn{background:var(--blue);color:#fff;border:0;padding:9px 12px;border-radius:8px;cursor:pointer}.wanted{background:#fff8df;border:1px solid #f3cd65}
+input{width:100%;padding:12px;border:1px solid #dce3ed;border-radius:10px;margin:8px 0;box-sizing:border-box}.viewer{display:none;margin-top:12px;background:#0b1425;padding:12px;border-radius:14px;text-align:center}.viewer img{max-width:100%;max-height:70vh;border-radius:8px}.controls{display:flex;justify-content:space-between;gap:8px;margin-top:10px}.controls button{border:0;border-radius:9px;padding:9px 14px;background:#29405f;color:white}
+footer{text-align:center;color:var(--muted);padding:30px}@media(max-width:750px){.grid{grid-template-columns:1fr}.hero{margin:14px 12px}.container{padding:0 12px}nav{display:none}}
+</style></head><body>
+<header><div class="nav"><div class="brand"><b>π</b> Math DZ</div><nav><a href="#lessons">الدروس</a><a href="#homeworks">الوظائف والتمارين</a><a href="#requests">طلبات الدروس</a></nav></div></header>
+<section class="hero"><h1>📐 رياضيات - أولى ثانوي</h1><p>ثانوية عربجي الطيب - بوعينان</p></section>
+<main class="container"><div class="grid"><section>
+<div class="box" id="lessons"><h2>📚 الدروس</h2><div id="lessonsList">جاري تحميل الدروس...</div><div class="viewer" id="viewer"><img id="big"><div class="controls"><button onclick="prev()">السابق</button><button onclick="closeViewer()">إغلاق</button><button onclick="next()">التالي</button></div></div></div>
+<div class="box" id="homeworks"><h2>📝 الوظائف والتمارين</h2><div id="homeworkList"><p>السلاسل والوظائف التي ترسلها ستظهر هنا.</p></div></div>
+</section><aside>
+<div class="box wanted"><h3>🔥 الأكثر طلباً هذا الأسبوع</h3><div id="most">جاري التحميل...</div></div>
+<div class="box" id="requests"><h3>❓ ما فهمتش درس؟</h3><p style="font-size:14px;color:#555">اكتب اسم الدرس اللي ما فهمتوش.</p><input id="lessonInput" placeholder="مثلاً: الدوال المرجعية"><button class="btn" style="width:100%" onclick="addRequest()">إرسال الطلب</button><div id="requestMsg" style="margin-top:10px"></div></div>
+</aside></div></main><footer>Math DZ — منصة الرياضيات</footer>
+<script>
+let gallery=[],cur=0;
+async function load(){const r=await fetch('/api/lessons');const data=await r.json();let l=document.getElementById('lessonsList');let h=document.getElementById('homeworkList');
+if(!data.length){l.innerHTML='<p>لم تتم إضافة دروس بعد.</p>';return}
+l.innerHTML=data.map((x,idx)=>`<div class="lesson"><strong>${esc(x.title)}</strong><small style="color:#718096">${esc(x.level||'')} — ${esc(x.chapter||'')}</small><br><button class="btn" onclick="openLesson(${idx})">عرض الصور (${x.images.length})</button></div>`).join('');
+window.data=data;
+}
+function openLesson(i){gallery=(window.data[i].images||[]).map(k=>'/api/image/'+encodeURIComponent(k));cur=0;showImg()}
+function showImg(){document.getElementById('big').src=gallery[cur];document.getElementById('viewer').style.display='block';document.getElementById('viewer').scrollIntoView({behavior:'smooth',block:'center'})}
+function next(){cur=(cur+1)%gallery.length;showImg()}function prev(){cur=(cur+gallery.length-1)%gallery.length;showImg()}function closeViewer(){document.getElementById('viewer').style.display='none'}
+async function addRequest(){const v=document.getElementById('lessonInput').value.trim();if(!v)return;await fetch('/api/requests',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({lesson:v})});document.getElementById('lessonInput').value='';document.getElementById('requestMsg').textContent='تم إرسال طلبك ✅'}
+async function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+async function loadRequests(){const r=await fetch('/api/requests');if(!r.ok){document.getElementById('most').textContent='لا توجد بيانات بعد';return}const d=await r.json();document.getElementById('most').innerHTML=d.length?`<b>${esc(d[0].lesson)}</b> — ${d[0].count} طلب`:'لا توجد طلبات بعد'}
+load();loadRequests();
+</script></body></html>
